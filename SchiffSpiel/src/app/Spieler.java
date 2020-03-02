@@ -3,6 +3,8 @@ package app;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Spieler {
 	
@@ -64,22 +66,52 @@ public class Spieler {
 			System.out.println("Sie haben momentan : "+ anzahlBombe + " Bomben");	
 			f.anzeigen();
 			
+			
 			for(int i = 0; i < bomben.length; i++) {
 				
-				System.out.println("Bitte die Koordinaten der Bombe eingeben: ");
-				String koordinaten = reader.readLine();
+				String koordinaten = null;
+				Koordinaten k = null;
+				boolean istImBereich = false;
+				boolean schonGetroffen = false;
 				
-				if(koordinaten.equalsIgnoreCase("End")) {
-					f.SpielEndAnzeigen();
-					System.out.println("Sie haben einen RestBestand von " + anzahlBombe + ", das Feld hat "+ f.belegteFelder() + " belegte Felder");
-					System.out.println("Sie haben " + f.getroffeneTeile() + " SchiffeTeile " + "getroffen");
-					System.out.println("End Spiel");
-					Feld.Filewriter.println("Sie haben einen RestBestand von " + anzahlBombe + ", das Feld hat "+ f.belegteFelder() + " belegte Felder");
-					Feld.Filewriter.println("Sie haben " + f.getroffeneTeile() + " SchiffeTeile " + "getroffen");
-					Feld.Filewriter.println("End Spiel");
-					Feld.Filewriter.close();
-					System.exit(0);
-				}
+				do{
+					System.out.println("Bitte die Koordinaten der Bombe eingeben: ");
+					koordinaten = reader.readLine();
+					
+					if(koordinaten.equalsIgnoreCase("End")) {
+						f.SpielEndAnzeigen();
+						System.out.println("Sie haben einen RestBestand von " + anzahlBombe + ", das Feld hat "+ f.belegteFelder() + " belegte Felder");
+						System.out.println("Sie haben " + f.getroffeneTeile() + " SchiffeTeile " + "getroffen");
+						System.out.println("Sie haben " + f.AlleSchiffeVersenkt() + " Schiffe" + " versenkt");
+						System.out.println("End Spiel");
+						Feld.Filewriter.println("Sie haben einen RestBestand von " + anzahlBombe + ", das Feld hat "+ f.belegteFelder() + " belegte Felder");
+						Feld.Filewriter.println("Sie haben " + f.getroffeneTeile() + " SchiffeTeile " + "getroffen");
+						Feld.Filewriter.println("Sie haben " + f.AlleSchiffeVersenkt() + " Schiffe" + " versenkt");
+						Feld.Filewriter.println("End Spiel");
+						Feld.Filewriter.close();
+						System.exit(0);
+					}
+					
+					k = new Koordinaten(koordinaten);
+					istImBereich = f.imFeldBereich(k);
+									
+					if(!istImBereich || !eingabePruefen(koordinaten)) {
+						System.out.println();
+						System.out.println("!!!Ungültige Koordinaten. Nochmal... ");
+					}else {
+						schonGetroffen = f.feldSchonGetroffen(k);
+						
+						if(schonGetroffen) {
+							System.out.println();
+							System.out.println(k + "Feld schon getroffen. Nochmal... ");
+							Feld.Filewriter.println();
+							Feld.Filewriter.println(k + "Feld schon getroffen. Nochmal... ");
+						}
+					}
+					
+				}while(!istImBereich || !eingabePruefen(koordinaten) || schonGetroffen);
+				
+				
 				
 				if(anzahlBombe == 1) {
 					f.SpielEndAnzeigen();
@@ -87,10 +119,12 @@ public class Spieler {
 					System.out.println("BombenAnzahl: " + anzahlBombe);
 					System.out.println("Sie haben keine Munition mehr, das Feld hat "+ f.belegteFelder() + " belegte Felder");
 					System.out.println("Sie haben " + f.getroffeneTeile() + " SchiffeTeile " + "getroffen");
+					System.out.println("Sie haben " + f.AlleSchiffeVersenkt() + " Schiffe" + " versenkt");
 					System.out.println("End Spiel");
 					Feld.Filewriter.println("BombenAnzahl: " + anzahlBombe);
 					Feld.Filewriter.println("Sie haben keine Munition mehr, das Feld hat "+ f.belegteFelder() + " belegte Felder");
 					Feld.Filewriter.println("Sie haben " + f.getroffeneTeile() + " SchiffeTeile " + "getroffen");
+					Feld.Filewriter.println("Sie haben " + f.AlleSchiffeVersenkt() + " Schiffe" + " versenkt");
 					Feld.Filewriter.println("End Spiel");
 					Feld.Filewriter.close();
 					System.exit(0);
@@ -99,16 +133,16 @@ public class Spieler {
 				if(f.AlleFelderGetroffen()) {
 					f.SpielEndAnzeigen();
 					System.out.println("Das Feld hat "+ f.belegteFelder() + " belegte Felder");
-					System.out.println("Sie haben mit "+ (bomben.length - anzahlBombe) + " Angriffen alle Schiffe versenkt und einen Restbestand von " + anzahlBombe + " Bomben");
+					System.out.println("Sie haben mit "+ (bomben.length - anzahlBombe) + " Angriffen " + f.AlleSchiffeVersenkt() + " Schiffe versenkt und einen Restbestand von " + anzahlBombe + " Bomben");
 					System.out.println("End Spiel");
 					Feld.Filewriter.println("Das Feld hat "+ f.belegteFelder() + " belegte Felder");
-					Feld.Filewriter.println("Sie haben mit "+ (bomben.length - anzahlBombe) + " Angriffen alle Schiffe versenkt und einen Restbestand von " + anzahlBombe + " Bomben");
+					Feld.Filewriter.println("Sie haben mit "+ (bomben.length - anzahlBombe) + " Angriffen " + f.AlleSchiffeVersenkt() + " Schiffe versenkt und einen Restbestand von " + anzahlBombe + " Bomben");
 					Feld.Filewriter.println("End Spiel");
 					Feld.Filewriter.close();
 					System.exit(0);
 				}
 				
-				Bombe b = new Bombe(new Koordinaten(koordinaten));
+				Bombe b = new Bombe(k);
 				f.FeldBombadieren(b);
 				f.anzeigen();
 				bomben[i] = b;
@@ -123,6 +157,7 @@ public class Spieler {
 			
 			for(int i = 0; i < bomben.length; i++) {
 				
+				boolean schonGetroffen = false;
 				
 				if(anzahlBombe == 1) {
 					f.SpielEndAnzeigen();
@@ -130,29 +165,45 @@ public class Spieler {
 					System.out.println("BombenAnzahl: " + anzahlBombe);
 					System.out.println("Sie haben keine Munition mehr, das Feld hat "+ f.belegteFelder() + " belegte Felder");
 					System.out.println("Sie haben " + f.getroffeneTeile() + " SchiffeTeile" + " getroffen");
+					System.out.println("Sie haben " + f.AlleSchiffeVersenkt() + " Schiffe" + " versenkt");
 					System.out.println("End Spiel");
 					Feld.Filewriter.println("BombenAnzahl: " + anzahlBombe);
 					Feld.Filewriter.println("Sie haben keine Munition mehr, das Feld hat "+ f.belegteFelder() + " belegte Felder");
 					Feld.Filewriter.println("Sie haben " + f.getroffeneTeile() + " SchiffeTeile" + " getroffen");
+					Feld.Filewriter.println("Sie haben " + f.AlleSchiffeVersenkt() + " Schiffe" + " versenkt");
 					Feld.Filewriter.println("End Spiel");
 					Feld.Filewriter.close();
 					System.exit(0);
 				}
 				
-				int zeile = (int) (Math.random()*f.getZeile());
-				int spalte = (int) (Math.random()*f.getSpalte());
+				Koordinaten k = null; 
+				do {
+					int zeile = (int) (Math.random()*f.getZeile());
+					int spalte = (int) (Math.random()*f.getSpalte());
+					
+					k = new Koordinaten(zeile, spalte);
+					schonGetroffen = f.feldSchonGetroffen(k);
+					
+					if(schonGetroffen) {
+						System.out.println();
+						System.out.println(k + "Feld schon getroffen. Nochmal... ");
+						Feld.Filewriter.println();
+						Feld.Filewriter.println(k + "Feld schon getroffen. Nochmal... ");
+					}
+					
+				}while(schonGetroffen);
 				
-				Bombe b = new Bombe(new Koordinaten(zeile, spalte));
+				Bombe b = new Bombe(k);
 				f.anzeigen();
 				f.FeldBombadieren(b);
 				
 				if(f.AlleFelderGetroffen()) {
 					f.SpielEndAnzeigen();
 					System.out.println("Das Feld hat "+ f.belegteFelder() + " belegte Felder");
-					System.out.println("Sie haben mit "+ (bomben.length - anzahlBombe) + " Angriffen alle Schiffe versenkt und einen Restbestand von " + anzahlBombe + " Bomben");
+					System.out.println("Sie haben mit "+ (bomben.length - anzahlBombe) + " Angriffen " + f.AlleSchiffeVersenkt() + " Schiffe versenkt und einen Restbestand von " + anzahlBombe + " Bomben");
 					System.out.println("End Spiel");
 					Feld.Filewriter.println("Das Feld hat "+ f.belegteFelder() + " belegte Felder");
-					Feld.Filewriter.println("Sie haben mit "+ (bomben.length - anzahlBombe) + " Angriffen alle Schiffe versenkt und einen Restbestand von " + anzahlBombe + " Bomben");
+					Feld.Filewriter.println("Sie haben mit "+ (bomben.length - anzahlBombe) + " Angriffen " + f.AlleSchiffeVersenkt() + " Schiffe versenkt und einen Restbestand von " + anzahlBombe + " Bomben");
 					Feld.Filewriter.println("End Spiel");
 					Feld.Filewriter.close();
 					System.exit(0);
@@ -166,8 +217,9 @@ public class Spieler {
 		}
 	}
 	
-	
-	
-	
-	
+	public boolean eingabePruefen(String str) {
+		Pattern patt = Pattern.compile("([A-Z])([0-9])([0-9])?");
+		Matcher m = patt.matcher(str);
+		return m.matches();
+	}
 }

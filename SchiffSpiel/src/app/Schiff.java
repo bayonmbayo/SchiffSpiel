@@ -39,6 +39,8 @@ public class Schiff {
 			
 		}
 		
+		getroffeneTeile = new Koordinaten[laenge];
+		
 		this.anzahlGetroffen = 0;
 	}
 

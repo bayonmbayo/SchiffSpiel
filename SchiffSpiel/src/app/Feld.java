@@ -7,6 +7,10 @@ import java.util.ArrayList;
 
 public class Feld {
 	
+	static final int NO_BOMBADIERT = 0;
+	static final int BOMBADIERT_WASSER = 1;
+	static final int BOMBADIERT_SCHIFF = 2;
+	
 	private int zeile;
     private int spalte ;
     private Koordinaten[][] feld;
@@ -17,7 +21,7 @@ public class Feld {
 	public Feld(int zeile, int spalte) {
 		try {
 			Filewriter = new PrintWriter("spielfeld.txt", "UTF-8");
-			Filewriter.println("Spiel Start ---- SchiffVersenken Version 2.0 -------");
+			Filewriter.println("Spiel Start ---- SchiffVersenken Version 2.3 Review -------");
 			Filewriter.println();
 			Filewriter.println();
 		} catch (FileNotFoundException e) {
@@ -100,6 +104,14 @@ public class Feld {
 					   }
 		}
 		return true;	
+	}
+	
+	public boolean imFeldBereich(Koordinaten k) {
+		if(!(k.getZeile() >= 0 && k.getZeile() < this.zeile && k.getSpalte() >= 0 && k.getSpalte() < this.spalte)) {
+			return false;
+		}
+		
+		return true;
 	}
 	
 	public void addSchiff(Schiff s) {
@@ -446,13 +458,16 @@ public class Feld {
 					++anzahl;
 					s.setAnzahlGetroffen(anzahl);
 					if(anzahl == s.getLaenge()) {
-						System.out.println("Versenkt");
-						Filewriter.println("Versenkt");
+						System.out.println("Treffer");
+						System.out.println(s.getName() + ": Versenkt");
+						Filewriter.println("Treffer");
+						Filewriter.println(s.getName() + ": Versenkt");
 					}else {
 						System.out.println("Treffer");
 						Filewriter.println("Treffer");
 					}
 					feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].setWert("T");
+					feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].setBombadiert(Feld.BOMBADIERT_SCHIFF);
 					System.out.println();
 					Filewriter.println();
 					return true;
@@ -462,22 +477,34 @@ public class Feld {
 		}
 		
 		if(feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].getWert().equals("W")){
-			b.getOrt().setWert("W");
-			addKoordinaten(b.getOrt());
-			System.out.println("Wasser");
-			System.out.println();
-			Filewriter.println("Wasser");
-			Filewriter.println();
+			if(feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].istBombadiert() == Feld.NO_BOMBADIERT) {
+				feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].setWert("W");
+				feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].setBombadiert(Feld.BOMBADIERT_WASSER);
+				System.out.println("Wasser");
+				System.out.println();
+				Filewriter.println("Wasser");	
+				Filewriter.println();
+			}else if(feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].istBombadiert() == Feld.BOMBADIERT_WASSER) {
+				feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].setWert("W");
+				feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].setBombadiert(Feld.BOMBADIERT_WASSER);
+				System.out.println("Wasser");	
+				System.out.println();
+				Filewriter.println("Wasser");	
+				Filewriter.println();
+			}
 			return true;
 		}
 		
 		if(feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].getWert().equals("T")){
-			b.getOrt().setWert("T");
-			addKoordinaten(b.getOrt());
-			System.out.println("Treffer");
-			System.out.println();
-			Filewriter.println("Treffer");	
-			Filewriter.println();
+			if(feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].istBombadiert() == Feld.BOMBADIERT_SCHIFF) {
+				feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].setWert("T");
+				feld[b.getOrt().getZeile()][b.getOrt().getSpalte()].setBombadiert(Feld.BOMBADIERT_SCHIFF);
+				System.out.println("Treffer");		
+				System.out.println();
+				Filewriter.println("Treffer");				
+				Filewriter.println();
+			}
+			
 			return true;
 		}
 		
@@ -517,9 +544,28 @@ public class Feld {
 		return true;
 	}
 	
+	public int AlleSchiffeVersenkt() {
+		int versenkteSchiffeAnzahl = 0;
+		for(int i = 0; i < schiffe.size(); i++) {
+			Schiff s = schiffe.get(i);
+					if(s.istVersenkt()) {
+						versenkteSchiffeAnzahl++;
+					}			
+			}
+		return versenkteSchiffeAnzahl;
+	}
+	
+	public boolean feldSchonGetroffen(Koordinaten k) {
+		if(feld[k.getZeile()][k.getSpalte()].istBombadiert() == Feld.BOMBADIERT_SCHIFF || feld[k.getZeile()][k.getSpalte()].istBombadiert() == Feld.BOMBADIERT_WASSER) {
+			return true;
+		}
+		return false;
+	}
+	
 	
 	public void anzeigen(){
         //First section of Ocean Map
+
 		System.out.println();
 		Filewriter.println();
 		
@@ -536,16 +582,31 @@ public class Feld {
         for(int i = 0; i < this.feld.length; i++) {
             for (int j = 0; j < this.feld[i].length; j++) {
                 if (j == 0) {
-                	if(i < 10) {
-                		System.out.print(" " + i);
-                    	Filewriter.print(" "+ i + " " + feld[i][j].getWert());
-                	}else {
-                		System.out.print(i);
-                    	Filewriter.print(i + " " + feld[i][j].getWert());
-                	}            
-                }
-                else {
-                    Filewriter.print(" "+ feld[i][j].getWert());                
+                		if(feld[i][j].istBombadiert() == Feld.BOMBADIERT_SCHIFF || feld[i][j].istBombadiert() == Feld.BOMBADIERT_WASSER) {
+                			if(i >= 10) {
+                				System.out.print(i + " " + feld[i][j].getWert());
+                				Filewriter.print(i + " " + feld[i][j].getWert());
+                			}else {
+                				System.out.print(" " + i + " " + feld[i][j].getWert());
+                				Filewriter.print(" " + i + " " + feld[i][j].getWert());
+                			}
+            			}else if(feld[i][j].istBombadiert() == Feld.NO_BOMBADIERT) {
+            				if(i >= 10) {
+            					System.out.print(i + "  ");
+            					Filewriter.print(i + "  ");
+            				}else {
+            					System.out.print(" " + i + "  ");
+            					Filewriter.print(" " + i + "  ");
+            				}
+            			}	  		
+                }else {
+                	if(feld[i][j].istBombadiert() == Feld.BOMBADIERT_SCHIFF || feld[i][j].istBombadiert() == Feld.BOMBADIERT_WASSER) {
+                		System.out.print(" "+ feld[i][j].getWert());
+                		Filewriter.print(" "+ feld[i][j].getWert());
+        			}else if(feld[i][j].istBombadiert() == Feld.NO_BOMBADIERT) {
+        				System.out.print("  ");
+        				Filewriter.print("  ");
+        			}              
                 }
             }
             System.out.println();

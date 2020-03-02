@@ -8,13 +8,20 @@ public class Spiel {
 
 	public static void main(String[] args) throws IOException {
 		
-		System.out.println("Spiel Start ---- SchiffVersenken Version 2.0 -------");
+		System.out.println("Spiel Start ---- SchiffVersenken Version 2.3 Review -------");
 		System.out.println();
 		System.out.println();
 		
 		//Parameter eingeben
 		if(!(args[0].equalsIgnoreCase("HumanPlayer") || args[0].equalsIgnoreCase("ComputerPlayer"))) {
 			System.out.println("Bist du HumanPlayer oder ComputerPlayer ?");
+			System.out.println("End Programm");
+			System.exit(0);
+		}
+		
+		if(!((args.length == 4 && args[0].equalsIgnoreCase("HumanPlayer"))  || (args.length == 5 && args[0].equalsIgnoreCase("ComputerPlayer")))) {
+			System.out.println("Bitte korrekte Anzahl von Parameter eingeben(4 oder 5) !");
+			System.out.println("End Programm");
 			System.exit(0);
 		}
 		
@@ -26,7 +33,7 @@ public class Spiel {
 		
 		//Schiffe auf den Feld platzieren
 		int schiffAnzahl = Integer.parseInt(args[3]);
-		int i = 0;
+		int i = 1;
 		Schiff schiff = null;
 		
 		do {
